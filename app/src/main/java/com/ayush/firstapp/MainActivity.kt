@@ -8,6 +8,8 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity()
 {
@@ -43,140 +45,157 @@ class MainActivity : AppCompatActivity()
         val tvDot: TextView = findViewById(R.id.tvDot)
         val tvMul: TextView = findViewById(R.id.tvMul)
         val tvPlus: TextView = findViewById(R.id.tvPlus)
-        var plus=0;var sub=0;var div=0;var mul=0;var res=0;var calc=0
-        val no = ArrayList<Int>()
+        var result=""
+
 
         tvExpression.setText("")
         /*Number Buttons*/
 
         tvOne.setOnClickListener {
-            tvExpression.append(" 1")
-            no.add(1)
+            tvExpression.append("1")
+
         }
 
         tvTwo.setOnClickListener {
-            tvExpression.append(" 2")
-            no.add(2)
+            tvExpression.append("2")
         }
 
         tvThree.setOnClickListener {
-            tvExpression.append(" 3")
-            no.add(3)
+            tvExpression.append("3")
         }
         tvFour.setOnClickListener {
-            tvExpression.append(" 4")
-            no.add(4)
+            tvExpression.append("4")
         }
 
         tvFive.setOnClickListener {
-            tvExpression.append(" 5")
-            no.add(5)
+            tvExpression.append("5")
         }
 
         tvSix.setOnClickListener {
-            tvExpression.append(" 6")
-            no.add(6)
+            tvExpression.append("6")
         }
 
         tvSeven.setOnClickListener {
-            tvExpression.append(" 7")
-            no.add(7)
+            tvExpression.append("7")
         }
 
         tvEight.setOnClickListener {
-            tvExpression.append(" 8")
-            no.add(8)
+            tvExpression.append("8")
         }
 
         tvNine.setOnClickListener {
-            tvExpression.append(" 9")
-            no.add(9)
+            tvExpression.append("9")
         }
 
         tvZero.setOnClickListener {
-            tvExpression.append(" 0")
-            no.add(0)
+            tvExpression.append("0")
         }
 
         /*Operators*/
 
         tvPlus.setOnClickListener {
-            tvExpression.append(" +")
-            plus=1
-            calc=1
+            tvExpression.append("+")
+
         }
 
         tvMinus.setOnClickListener {
-            tvExpression.append(" -")
-            sub=1
-            calc=1
+            tvExpression.append("-")
         }
 
         tvMul.setOnClickListener {
-            tvExpression.append(" *")
-            sub=1
-            calc=1
+            tvExpression.append("*")
+
         }
 
         tvDivide.setOnClickListener {
-            tvExpression.append(" /")
-            div=1
-            calc=1
+            tvExpression.append("/")
+
         }
 
         tvDot.setOnClickListener {
-            tvExpression.append(" .")
+            tvExpression.append(".")
         }
 
         tvClear.setOnClickListener {
            tvExpression.setText("")
+            tvResult.setText("")
         }
 
-        tvEquals.setOnClickListener {
-           if (no.size<2 && calc==0){
-               print("nothing to process")
-           }else{
-               calc=0
-               if (plus==1){
-
-                  res = no.get(0)+no.get(1)
-                   tvResult.text=res.toString()
-               }else if(sub==1){
-                   res = no.get(0)-no.get(1)
-                   tvResult.text=res.toString()
-               }else if(mul==1){
-                   res=no.get(0)*no.get(1)
-                   tvResult.text=res.toString()
-               }
-               else if(div==1){
-                   res=no.get(0)/no.get(1)
-                   tvResult.text=res.toString()
-               }
-               no.clear()
-           }
+        tvEquals.setOnClickListener(){
+            tvResult.setText("")
+            val string=tvExpression.text.toString()
+            tvResult.setText(calculate(string))
+            tvExpression.setText("")
         }
 
         tvBack.setOnClickListener {
             val text = tvExpression.text.toString()
-            val length=text.length-2
+            val length=text.length-1
             if(text.isNotEmpty()) {
-                tvExpression.text = text.slice(0..length).toString()
+                tvExpression.text = text.slice(0..length-1).toString()
             }
 
             tvResult.text = ""
         }
     }
 
-    /*Function to calculate the expressions using expression builder library*/
 
-    fun evaluateExpression(string: String, clear: Boolean) {
-//        if(clear) {
-//            Result.text = ""
-//            Expression.append(string)
-//        } else {
-//            Expression.append(Result.text)
-//            Expression.append(string)
-//            Result.text = ""
-//        }
     }
-}
+    fun calculate(s: String): String {
+        return evaluatePostfix(infixToPostfix(s)).toString()
+    }
+
+    private fun rank(op: Char): Int {
+        return when {
+            op == '+' || op == '-' -> 1
+            op == '*' || op == '/' -> 2
+            else -> 0
+        }
+    }
+
+    private fun infixToPostfix(infixExp: String): Queue<String> {
+        val ans: Queue<String> = LinkedList()
+        val stack: Stack<Char> = Stack()
+        var i = 0
+        val len = infixExp.length
+        while (i < len) {
+            val num = StringBuilder()
+            while (i < len && infixExp[i].isDigit()) num.append(infixExp[i++])
+            if (num.isNotEmpty()) ans.add(num.toString())
+            if (i == len) break
+            val ch = infixExp[i++]
+            when {
+                ch.isWhitespace() -> {}
+                else -> {
+                    while (stack.isNotEmpty() && rank(stack.peek()) >= rank(ch)) {
+                        ans.add("${stack.pop()}")
+                    }
+                    stack.push(ch)
+                }
+            }
+        }
+        while (stack.isNotEmpty()) {
+            ans.add("${stack.pop()}")
+        }
+        return ans
+    }
+
+    private fun evaluatePostfix(postfix: Queue<String>): Int {
+        val stack: Stack<Long> = Stack()
+        for (exp in postfix) {
+            if (exp[0].isDigit())
+                stack.push(exp.toLong())
+            else {
+                val b = stack.pop()
+                val a = stack.pop()
+                when (exp[0]) {
+                    '+' -> stack.push(a + b)
+                    '-' -> stack.push(a - b)
+                    '*' -> stack.push(a * b)
+                    else -> stack.push(a / b)
+                }
+            }
+        }
+        return stack.pop().toInt()
+    }
+
