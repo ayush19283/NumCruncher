@@ -8,6 +8,7 @@ import android.view.Window
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -124,7 +125,19 @@ class MainActivity : AppCompatActivity()
         tvEquals.setOnClickListener(){
             tvResult.setText("")
             val string=tvExpression.text.toString()
-            tvResult.setText(calculate(string))
+            var str=""
+            try{
+                 str= calculate(string)
+            }
+            catch(e: EmptyStackException){
+                // caught and handles it
+                Toast.makeText(this, "Invalid Syntax", Toast.LENGTH_SHORT).show()
+            }
+            catch (e:ArithmeticException){
+                Toast.makeText(this, "Can not Divide by zero", Toast.LENGTH_SHORT).show()
+            }
+
+            tvResult.setText(str)
             tvExpression.setText("")
         }
 
